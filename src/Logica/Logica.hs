@@ -1,4 +1,4 @@
-module Logica where
+module Logica.Logica where
 
 data Dificuldade = Facil | Medio | Dificil deriving (Show, Eq)
 data Instrumento = Violao | Guitarra | Baixo | Teclado deriving (Show, Eq)
@@ -23,7 +23,7 @@ filtrarPorDificuldade dificuldadeDesejada lista = filter (\musica -> dificuldade
 
 recomendarMusica :: String -> Instrumento -> Dificuldade -> [Musica] -> [Musica]
 recomendarMusica estiloDesejado instrumentoDesejado dificuldadeDesejada lista = 
- filtrarPorEstilo estiloDesejado (filtrarPorInstrumento instrumentoDesejado (filtrarPorDificuldade dificuldadeDesejada lista))
+  filtrarPorEstilo estiloDesejado (filtrarPorInstrumento instrumentoDesejado (filtrarPorDificuldade dificuldadeDesejada lista))
 
 bancoDeMusicas :: [Musica]
 bancoDeMusicas = 

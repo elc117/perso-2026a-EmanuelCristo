@@ -2,17 +2,10 @@ FROM haskell:9.8.4
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libsqlite3-dev \
-    pkg-config \
- && rm -rf /var/lib/apt/lists/*
+COPY src ./src
 
-COPY . .
+RUN ghc -isrc -package=text src/Main/Main.hs -o app-musica
 
-WORKDIR /app/src/06-scotty-sqlite
+EXPOSE 3000
 
-RUN cabal update && \
-    cabal build && \
-    cp "$(cabal list-bin demo-scotty-sqlite)" /usr/local/bin/demo-scotty-sqlite
-
-CMD ["demo-scotty-sqlite"]
+CMD ["./app-musica"]

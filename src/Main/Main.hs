@@ -1,42 +1,41 @@
 {-# LANGUAGE OverloadedStrings #-}
+module Main where
 
 import Web.Scotty
-import Network.Wai.Middleware.RequestLogger (logStdoutDev)
-import qualified Data.Text.Lazy as T
+import Data.Text.Lazy (pack)
+import Text.Read (readMaybe)
 import Logica.Logica
-
-converterDificuldade :: String -> Dificuldade
-converterDificuldade "Facil"   = Facil
-converterDificuldade "Medio"   = Medio
-converterDificuldade "Dificil" = Dificil
-converterDificuldade _         = Facil 
-
-converterInstrumento :: String -> Instrumento
-converterInstrumento "Violao"   = Violao
-converterInstrumento "Guitarra" = Guitarra
-converterInstrumento "Baixo"    = Baixo
-converterInstrumento "Teclado"  = Teclado
-converterInstrumento _          = Violao
 
 main :: IO ()
 main = scotty 3000 $ do
-  middleware logStdoutDev
 
-  get "/" $ do
-    text "Página inicial"
+    get "/" $ do
+        text "Sistema de Recomendacao Musical"
 
-  get "/hello" $ do
-    text "Hello, Haskell Web Service!"
+    get "/recomendar/:estilo/:instrumento/:dificuldade" $ do
+        estiloStr <- captureParam "estilo"      :: ActionM String
+        instStr   <- captureParam "instrumento" :: ActionM String
+        difStr    <- captureParam "dificuldade" :: ActionM String
 
-  get "/recomendar/:estilo/:instrumento/:dificuldade" $ do
-    
-    estiloStr <- pathParam "estilo"      :: ActionM String
-    instStr   <- pathParam "instrumento" :: ActionM String
-    difStr    <- pathParam "dificuldade" :: ActionM String
+        let estMaybe  = readMaybe estiloStr :: Maybe Estilo
+            instMaybe = readMaybe instStr   :: Maybe Instrumento
+            difMaybe  = readMaybe difStr    :: Maybe Dificuldade
 
-    let instTipo = converterInstrumento instStr
-        difTipo  = converterDificuldade difStr
+        case (estMaybe, instMaybe, difMaybe) of
+            (Just est, Just inst, Just dif) -> do
+                let musicasFiltradas = recomendarMusica est inst dif bancoDeMusicas
+                text $ pack $ "Recomendacoes encontradas: " ++ show musicasFiltradas
+            _ -> 
+                text "Erro: Estilo, Instrumento ou Dificuldade nao reconhecidos."
 
-    let musicasFiltradas = recomendarMusica estiloStr instTipo difTipo bancoDeMusicas
-    
-    text (T.pack (show musicasFiltradas))
+    get "/artista/:nome" $ do
+        nomeArt <- captureParam "nome" :: ActionM String
+        let musicas = filtrarPorArtista nomeArt bancoDeMusicas
+        text $ pack $ "Musicas do artista " ++ nomeArt ++ ": " ++ show musicas
+
+    get "/buscar/:nome" $ do
+        nomeMusica <- captureParam "nome" :: ActionM String
+        let resultado = buscarPorNome nomeMusica bancoDeMusicas
+        case resultado of
+            Just m  -> text $ pack $ "Musica Encontrada: " ++ show m
+            Nothing -> text "Musica nao encontrada no acervo."

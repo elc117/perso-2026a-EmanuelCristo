@@ -1,7 +1,7 @@
 module Logica.Logica where
 
-data Dificuldade = Facil | Medio | Dificil deriving (Show, Eq)
-data Instrumento = Violao | Guitarra | Baixo | Teclado deriving (Show, Eq)
+data Dificuldade = Facil | Medio | Dificil deriving (Show, Read, Eq)
+data Instrumento = Violao | Guitarra | Baixo | Teclado deriving (Show, Read, Eq)
 data Estilo = Rock | Pop | Jazz | Metal | MPB  deriving (Show, Read, Eq)
 
 data Musica = Musica 

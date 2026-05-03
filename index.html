@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recomendador de Tabs</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #1e1e1e; color: #fff; padding: 20px; }
+        .container { background-color: #2d2d2d; padding: 30px; border-radius: 10px; max-width: 800px; margin: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        h1 { color: #4CAF50; text-align: center; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab-btn { flex: 1; padding: 10px; background: #3d3d3d; border: none; color: white; cursor: pointer; border-radius: 5px; }
+        .tab-btn:hover, .tab-btn.active { background: #4CAF50; font-weight: bold; }
+        select, input, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 5px; border: none; box-sizing: border-box;}
+        select, input { background-color: #3d3d3d; color: white; }
+        button.action-btn { background-color: #4CAF50; color: white; cursor: pointer; font-weight: bold; font-size: 16px; }
+        button.action-btn:hover { background-color: #45a049; }
+        .card { background: #333; padding: 15px; margin: 10px 0; border-radius: 8px; border-left: 5px solid #4CAF50; }
+        .btn-tocar { display: inline-block; background: #E53935; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold; margin-top: 10px;}
+        .btn-tocar:hover { background: #b71c1c; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Acervo & Tabs</h1>
+        
+        <div class="tabs">
+            <button class="tab-btn active" onclick="mostrarAba('recomendar')">Recomendação Técnica</button>
+            <button class="tab-btn" onclick="mostrarAba('buscaNome')">Buscar por Música</button>
+            <button class="tab-btn" onclick="mostrarAba('buscaArtista')">Buscar por Artista</button>
+            <button class="tab-btn" onclick="mostrarAba('cadastrarMusica')" style="background-color: #1565C0;">➕ Cadastrar</button>
+        </div>
+
+        <div id="recomendar" class="aba">
+            <select id="estilo">
+                <option value="Rock">Rock</option><option value="Metal">Metal</option>
+                <option value="Pop">Pop</option><option value="Jazz">Jazz</option><option value="MPB">MPB</option>
+            </select>
+            <select id="instrumento">
+                <option value="Guitarra">Guitarra</option><option value="Baixo">Contrabaixo</option>
+            </select>
+            <select id="dificuldade">
+                <option value="Facil">Iniciante (Fácil)</option>
+                <option value="Medio">Intermediário (Médio)</option>
+                <option value="Dificil">Avançado (Difícil)</option>
+            </select>
+            <button class="action-btn" onclick="fazerRequisicao('/recomendar/' + document.getElementById('estilo').value + '/' + document.getElementById('instrumento').value + '/' + document.getElementById('dificuldade').value)">Achar Música</button>
+        </div>
+
+        <div id="buscaNome" class="aba hidden">
+            <input type="text" id="inputNome" placeholder="Ex: Master of Puppets">
+            <button class="action-btn" onclick="fazerRequisicao('/buscar/' + document.getElementById('inputNome').value)">Buscar Música</button>
+        </div>
+
+        <div id="buscaArtista" class="aba hidden">
+            <input type="text" id="inputArtista" placeholder="Ex: Metallica">
+            <button class="action-btn" onclick="fazerRequisicao('/artista/' + document.getElementById('inputArtista').value)">Ver Músicas</button>
+        </div>
+
+        <div id="cadastrarMusica" class="aba hidden">
+            <p style="text-align: center; color: #aaa;">Adicione uma nova tablatura direto no banco de dados SQLite.</p>
+            <form id="formCadastro" onsubmit="enviarCadastro(event)">
+                <input type="text" id="cadTitulo" placeholder="Título da Música (ex: Hysteria)" required>
+                <input type="text" id="cadArtista" placeholder="Banda / Artista (ex: Muse)" required>
+                <input type="url" id="cadLink" placeholder="Link Completo (ex: https://...)" required>
+                
+                <select id="cadEstilo">
+                    <option value="Rock">Rock</option><option value="Metal">Metal</option>
+                    <option value="Pop">Pop</option><option value="Jazz">Jazz</option>
+                </select>
+                
+                <select id="cadInstrumento">
+                    <option value="Guitarra">Guitarra</option><option value="Baixo">Contrabaixo</option>
+                </select>
+                
+                <div style="display: flex; gap: 10px;">
+                    <input type="number" id="cadBpm" placeholder="Velocidade (BPM)" required>
+                    <input type="number" id="cadVar" placeholder="Variações (ex: 4)" required>
+                </div>
+                
+                <button type="submit" class="action-btn" style="background-color: #1565C0;">💾 Salvar no Banco</button>
+            </form>
+            <div id="msgCadastro" style="margin-top: 15px; text-align: center; font-size: 18px;"></div>
+        </div>
+
+        <h2 style="margin-top: 30px; border-bottom: 1px solid #555; padding-bottom: 10px;">Resultados</h2>
+        <div id="resultados">Os resultados aparecerão aqui...</div>
+        
+    </div>
+
+    <script>
+        function mostrarAba(idAba) {
+            document.querySelectorAll('.aba').forEach(aba => aba.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(idAba).classList.remove('hidden');
+            event.target.classList.add('active');
+        }
+
+        async function fazerRequisicao(url) {
+            const divResultados = document.getElementById('resultados');
+            divResultados.innerHTML = "<i>Carregando do servidor Haskell...</i>";
+            try {
+                const response = await fetch(url);
+                const html = await response.text();
+                divResultados.innerHTML = html;
+            } catch (error) {
+                divResultados.innerHTML = "<b style='color:red;'>Erro ao contactar o servidor.</b>";
+            }
+        }
+
+        async function enviarCadastro(e) {
+            e.preventDefault();
+            const divMsg = document.getElementById('msgCadastro');
+            divMsg.innerHTML = "<i>Salvando no banco de dados...</i>";
+
+            const dados = new URLSearchParams();
+            dados.append('titulo', document.getElementById('cadTitulo').value);
+            dados.append('artista', document.getElementById('cadArtista').value);
+            dados.append('linkTablatura', document.getElementById('cadLink').value);
+            dados.append('estilo', document.getElementById('cadEstilo').value);
+            dados.append('instrumento', document.getElementById('cadInstrumento').value);
+            dados.append('bpm', document.getElementById('cadBpm').value);
+            dados.append('variacoes', document.getElementById('cadVar').value);
+
+            try {
+                const response = await fetch('/cadastrar', {
+                    method: 'POST',
+                    body: dados
+                });
+                
+                const msg = await response.text();
+                divMsg.innerHTML = `<b style="color:#4CAF50;">${msg}</b>`;
+                document.getElementById('formCadastro').reset();
+            } catch (error) {
+                divMsg.innerHTML = "<b style='color:red;'>Erro ao salvar no servidor.</b>";
+            }
+        }
+    </script>
+</body>
+</html>

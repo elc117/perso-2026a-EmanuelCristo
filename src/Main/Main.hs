@@ -7,7 +7,6 @@ import Text.Read (readMaybe)
 import Logica.Logica
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
 import Control.Monad.IO.Class (liftIO) 
-import System.Environment (lookupEnv) -- Import necessário para ler a porta da nuvem!
 
 formatarMusicaHTML :: Musica -> String
 formatarMusicaHTML m = 
@@ -26,12 +25,8 @@ formatarListaHTML lista = concatMap formatarMusicaHTML lista
 main :: IO ()
 main = do
     inicializarBanco
-
-    portaEnv <- lookupEnv "PORT"
-    let portaParaUsar = case portaEnv of
-                            Just p  -> read p
-                            Nothing -> 3000
-    scotty portaParaUsar $ do
+    
+    scotty 3000 $ do
         middleware logStdoutDev
 
         get "/" $ do
@@ -88,5 +83,5 @@ main = do
             case (estMaybe, instMaybe) of
                 (Just est, Just inst) -> do
                     liftIO $ cadastrarMusica tit art linkTab est inst b v
-                    text "Sucesso! A musica foi cadastrada e já pode ser buscada."
+                    text "Sucesso! A musica foi cadastrada e ja pode ser buscada."
                 _ -> text "Erro: Estilo ou Instrumento invalido."

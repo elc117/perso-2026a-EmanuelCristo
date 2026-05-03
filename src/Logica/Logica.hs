@@ -47,7 +47,6 @@ buscarArtistaDoBanco artistaDesejado = do
     resultado <- query conn "SELECT id, titulo, artista, linkTablatura, estilo, instrumento, bpm, variacoes, popularidade FROM musicas WHERE artista LIKE ? ORDER BY popularidade DESC" (Only busca) :: IO [Musica]
     close conn; return resultado
 
--- NOVA FUNÇÃO: Recebe o ID interno do banco, atualiza a popularidade e retorna o Link salvo
 tocarMusica :: Int -> IO (Maybe String)
 tocarMusica idDaMusica = do
     conn <- open "musicas.db"

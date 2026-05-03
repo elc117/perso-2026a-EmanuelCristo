@@ -7,6 +7,7 @@ import Text.Read (readMaybe)
 import Logica.Logica
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
 import Control.Monad.IO.Class (liftIO) 
+import System.Environment (lookupEnv) -- Import necessário para ler a porta da nuvem!
 
 formatarMusicaHTML :: Musica -> String
 formatarMusicaHTML m = 
@@ -15,7 +16,6 @@ formatarMusicaHTML m =
     "<p style='margin:5px 0;'><strong>Instrumento:</strong> " ++ show (instrumento m) ++ " | <strong>Estilo:</strong> " ++ show (estilo m) ++ "</p>" ++
     "<p style='margin:5px 0;'><strong>Nivel Técnico:</strong> " ++ show (calcularDificuldade (metricas m)) ++ " (BPM: " ++ show (bpm (metricas m)) ++ " | Var: " ++ show (variacoes (metricas m)) ++ ")</p>" ++
     "<p style='margin:5px 0; color:#aaa;'><em>" ++ show (popularidade m) ++ " acessos registrados</em></p>" ++
-    -- O Link agora usa o ID interno do Banco de Dados
     "<a href='/tocar/" ++ show (idDb m) ++ "' target='_blank' class='btn-tocar'>▶ Tocar Agora</a>" ++
     "</div>"
 
@@ -27,19 +27,21 @@ main :: IO ()
 main = do
     inicializarBanco
 
-    scotty 3000 $ do
+    portaEnv <- lookupEnv "PORT"
+    let portaParaUsar = case portaEnv of
+                            Just p  -> read p
+                            Nothing -> 3000
+    scotty portaParaUsar $ do
         middleware logStdoutDev
 
         get "/" $ do
             setHeader "Content-Type" "text/html; charset=utf-8"
             file "index.html"
 
-        -- ROTA DE REDIRECIONAMENTO CORRIGIDA
         get "/tocar/:id" $ do
             idStr <- captureParam "id" :: ActionM String
             case readMaybe idStr :: Maybe Int of
                 Just idDaMusica -> do
-                    -- Chama a função que incrementa e busca o link completo
                     maybeLink <- liftIO $ tocarMusica idDaMusica
                     case maybeLink of
                         Just linkReal -> redirect (pack linkReal)
@@ -71,7 +73,6 @@ main = do
             resultado <- liftIO $ buscarArtistaDoBanco nomeArt
             html $ pack $ formatarListaHTML resultado
 
-        -- ROTA POST DE CADASTRO CORRIGIDA (Recebe o link completo agora)
         post "/cadastrar" $ do
             tit <- formParam "titulo"      :: ActionM String
             art <- formParam "artista"     :: ActionM String

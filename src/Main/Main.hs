@@ -7,6 +7,7 @@ import Text.Read (readMaybe)
 import Logica.Logica
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
 import Control.Monad.IO.Class (liftIO) 
+import System.Environment (lookupEnv)
 
 formatarMusicaHTML :: Musica -> String
 formatarMusicaHTML m = 
@@ -25,8 +26,13 @@ formatarListaHTML lista = concatMap formatarMusicaHTML lista
 main :: IO ()
 main = do
     inicializarBanco
-    
-    scotty 3000 $ do
+
+    portaEnv <- lookupEnv "PORT"
+    let portaParaUsar = case portaEnv of
+                            Just p  -> read p
+                            Nothing -> 3000
+
+    scotty portaParaUsar $ do
         middleware logStdoutDev
 
         get "/" $ do

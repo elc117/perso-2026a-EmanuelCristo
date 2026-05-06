@@ -81,7 +81,7 @@ Conforme expliquei na seção de desenvolvimento, fiz várias tentativas de depl
 
 ## 7. Resultado final
 
-![Demonstração do Sistema](demonstracao.gif)
+![Demonstração do Sistema](exemplo_site.gif)
 
 ---
 
